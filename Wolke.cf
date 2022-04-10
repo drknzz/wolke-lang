@@ -2,7 +2,7 @@
 
 entrypoints Program ;
 
-Prog.   Program ::= [Def] ;
+Prog.       Program ::= [Def] ;
 
 FunDef.     Def ::= "def" Ident "(" [Arg] ")" "->" Type Block ;
 
