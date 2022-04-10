@@ -10,9 +10,9 @@ VarDef.     Def ::= Type Ident "=" Expr ;
 
 separator nonempty Def "" ;
 
-Arg. 	    Arg ::= Type Ident;
+Arg. 	    Arg ::= Ident ":" Type;
 
-ArgRef.     Arg ::= Type "&" Ident;
+ArgRef.     Arg ::= Ident ":" Type "&";
 
 separator   Arg "," ;
 
