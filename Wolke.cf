@@ -2,7 +2,7 @@
 
 entrypoints Program ;
 
-Program.   Program ::= [Def] ;
+Prog.   Program ::= [Def] ;
 
 FunDef.     Def ::= "def" Ident "(" [Arg] ")" "->" Type Block ;
 
@@ -10,7 +10,7 @@ VarDef.     Def ::= Type Ident "=" Expr ;
 
 separator nonempty Def "" ;
 
-Arg. 	    Arg ::= Ident ":" Type;
+ArgVal. 	Arg ::= Ident ":" Type;
 
 ArgRef.     Arg ::= Ident ":" Type "&";
 
