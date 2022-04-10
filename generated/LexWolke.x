@@ -21,7 +21,7 @@ $i = [$l $d _ ']          -- identifier character
 $u = [\0-\255]          -- universal: any character
 
 @rsyms =    -- symbols and non-identifier-like reserved words
-   \( | \) | \- \> | \= | \& | \, | \{ | \} | \; | \- | \+ | \* | \/ | \% | \< | \< \= | \> | \> \= | \= \= | \! \=
+   \( | \) | \- \> | \= | \: | \& | \, | \{ | \} | \; | \- | \+ | \* | \/ | \% | \< | \< \= | \> | \> \= | \= \= | \! \=
 
 :-
 "#" [.]* ; -- Toss single line comments
@@ -97,7 +97,7 @@ eitherResIdent tv s = treeFind resWords
                               | s == a = t
 
 resWords :: BTree
-resWords = b "False" 20 (b "->" 10 (b ")" 5 (b "&" 3 (b "%" 2 (b "!=" 1 N N) N) (b "(" 4 N N)) (b "," 8 (b "+" 7 (b "*" 6 N N) N) (b "-" 9 N N))) (b "=" 15 (b "<" 13 (b ";" 12 (b "/" 11 N N) N) (b "<=" 14 N N)) (b ">=" 18 (b ">" 17 (b "==" 16 N N) N) (b "Boolean" 19 N N)))) (b "else" 30 (b "Void" 25 (b "String" 23 (b "Int" 22 (b "Function" 21 N N) N) (b "True" 24 N N)) (b "continue" 28 (b "break" 27 (b "and" 26 N N) N) (b "def" 29 N N))) (b "print" 35 (b "or" 33 (b "not" 32 (b "if" 31 N N) N) (b "pass" 34 N N)) (b "{" 38 (b "while" 37 (b "return" 36 N N) N) (b "}" 39 N N))))
+resWords = b "False" 21 (b "/" 11 (b "*" 6 (b "&" 3 (b "%" 2 (b "!=" 1 N N) N) (b ")" 5 (b "(" 4 N N) N)) (b "-" 9 (b "," 8 (b "+" 7 N N) N) (b "->" 10 N N))) (b "=" 16 (b "<" 14 (b ";" 13 (b ":" 12 N N) N) (b "<=" 15 N N)) (b ">=" 19 (b ">" 18 (b "==" 17 N N) N) (b "Boolean" 20 N N)))) (b "else" 31 (b "Void" 26 (b "String" 24 (b "Int" 23 (b "Function" 22 N N) N) (b "True" 25 N N)) (b "continue" 29 (b "break" 28 (b "and" 27 N N) N) (b "def" 30 N N))) (b "print" 36 (b "or" 34 (b "not" 33 (b "if" 32 N N) N) (b "pass" 35 N N)) (b "{" 39 (b "while" 38 (b "return" 37 N N) N) (b "}" 40 N N))))
    where b s n = let bs = id s
                   in B bs (TS bs n)
 

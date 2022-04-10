@@ -1,0 +1,19 @@
+# (while, if)
+# (break, continue)
+
+def main() -> Void {
+    Int x = 10;
+    
+    while True {
+        if x % 2 == 1 {
+            continue;
+        }
+
+        print(x);
+
+        if x == 0 {
+            break;
+        }
+    }
+    return;
+}

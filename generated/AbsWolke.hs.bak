@@ -23,13 +23,13 @@ instance Functor Def where
     fmap f x = case x of
         FunDef a ident args type_ block -> FunDef (f a) ident (map (fmap f) args) (fmap f type_) (fmap f block)
         VarDef a type_ ident expr -> VarDef (f a) (fmap f type_) ident (fmap f expr)
-data Arg a = Arg a (Type a) Ident | ArgRef a (Type a) Ident
+data Arg a = Arg a Ident (Type a) | ArgRef a Ident (Type a)
   deriving (Eq, Ord, Show, Read)
 
 instance Functor Arg where
     fmap f x = case x of
-        Arg a type_ ident -> Arg (f a) (fmap f type_) ident
-        ArgRef a type_ ident -> ArgRef (f a) (fmap f type_) ident
+        Arg a ident type_ -> Arg (f a) ident (fmap f type_)
+        ArgRef a ident type_ -> ArgRef (f a) ident (fmap f type_)
 data Block a = SBlock a [Stmt a]
   deriving (Eq, Ord, Show, Read)
 
@@ -50,7 +50,6 @@ data Stmt a
     | Break a
     | Continue a
     | Print a (Expr a)
-    | ToString a (Expr a)
   deriving (Eq, Ord, Show, Read)
 
 instance Functor Stmt where
@@ -68,7 +67,6 @@ instance Functor Stmt where
         Break a -> Break (f a)
         Continue a -> Continue (f a)
         Print a expr -> Print (f a) (fmap f expr)
-        ToString a expr -> ToString (f a) (fmap f expr)
 data Type a
     = Int a | Str a | Bool a | Void a | Fun a [Type a] (Type a)
   deriving (Eq, Ord, Show, Read)

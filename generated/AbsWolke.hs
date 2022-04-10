@@ -8,12 +8,12 @@ module AbsWolke where
 
 
 newtype Ident = Ident String deriving (Eq, Ord, Show, Read)
-data Program a = Program a [Def a]
+data Program a = Prog a [Def a]
   deriving (Eq, Ord, Show, Read)
 
 instance Functor Program where
     fmap f x = case x of
-        Program a defs -> Program (f a) (map (fmap f) defs)
+        Prog a defs -> Prog (f a) (map (fmap f) defs)
 data Def a
     = FunDef a Ident [Arg a] (Type a) (Block a)
     | VarDef a (Type a) Ident (Expr a)
@@ -23,13 +23,13 @@ instance Functor Def where
     fmap f x = case x of
         FunDef a ident args type_ block -> FunDef (f a) ident (map (fmap f) args) (fmap f type_) (fmap f block)
         VarDef a type_ ident expr -> VarDef (f a) (fmap f type_) ident (fmap f expr)
-data Arg a = Arg a (Type a) Ident | ArgRef a (Type a) Ident
+data Arg a = ArgVal a Ident (Type a) | ArgRef a Ident (Type a)
   deriving (Eq, Ord, Show, Read)
 
 instance Functor Arg where
     fmap f x = case x of
-        Arg a type_ ident -> Arg (f a) (fmap f type_) ident
-        ArgRef a type_ ident -> ArgRef (f a) (fmap f type_) ident
+        ArgVal a ident type_ -> ArgVal (f a) ident (fmap f type_)
+        ArgRef a ident type_ -> ArgRef (f a) ident (fmap f type_)
 data Block a = SBlock a [Stmt a]
   deriving (Eq, Ord, Show, Read)
 

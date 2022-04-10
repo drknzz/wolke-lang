@@ -85,7 +85,7 @@ instance Print Ident where
 
 instance Print (Program a) where
   prt i e = case e of
-    Program _ defs -> prPrec i 0 (concatD [prt 0 defs])
+    Prog _ defs -> prPrec i 0 (concatD [prt 0 defs])
 
 instance Print (Def a) where
   prt i e = case e of
@@ -95,8 +95,8 @@ instance Print (Def a) where
   prtList _ (x:xs) = (concatD [prt 0 x, prt 0 xs])
 instance Print (Arg a) where
   prt i e = case e of
-    Arg _ type_ id -> prPrec i 0 (concatD [prt 0 type_, prt 0 id])
-    ArgRef _ type_ id -> prPrec i 0 (concatD [prt 0 type_, doc (showString "&"), prt 0 id])
+    ArgVal _ id type_ -> prPrec i 0 (concatD [prt 0 id, doc (showString ":"), prt 0 type_])
+    ArgRef _ id type_ -> prPrec i 0 (concatD [prt 0 id, doc (showString ":"), prt 0 type_, doc (showString "&")])
   prtList _ [] = (concatD [])
   prtList _ [x] = (concatD [prt 0 x])
   prtList _ (x:xs) = (concatD [prt 0 x, doc (showString ","), prt 0 xs])
@@ -112,14 +112,13 @@ instance Print (Stmt a) where
     Ass _ id expr -> prPrec i 0 (concatD [prt 0 id, doc (showString "="), prt 0 expr, doc (showString ";")])
     Ret _ expr -> prPrec i 0 (concatD [doc (showString "return"), prt 0 expr, doc (showString ";")])
     VRet _ -> prPrec i 0 (concatD [doc (showString "return"), doc (showString ";")])
-    Cond _ expr block -> prPrec i 0 (concatD [doc (showString "if"), prt 0 expr, prt 0 block])
+    Cond _ expr block -> prPrec i 0 (concatD [doc (showString "ife"), prt 0 expr, prt 0 block])
     CondElse _ expr block1 block2 -> prPrec i 0 (concatD [doc (showString "if"), prt 0 expr, prt 0 block1, doc (showString "else"), prt 0 block2])
     While _ expr block -> prPrec i 0 (concatD [doc (showString "while"), prt 0 expr, prt 0 block])
     SExp _ expr -> prPrec i 0 (concatD [prt 0 expr, doc (showString ";")])
     Break _ -> prPrec i 0 (concatD [doc (showString "break"), doc (showString ";")])
     Continue _ -> prPrec i 0 (concatD [doc (showString "continue"), doc (showString ";")])
-    Print _ expr -> prPrec i 0 (concatD [doc (showString "print"), doc (showString "("), prt 0 expr, doc (showString ")")])
-    ToString _ expr -> prPrec i 0 (concatD [doc (showString "to_string"), doc (showString "("), prt 0 expr, doc (showString ")")])
+    Print _ expr -> prPrec i 0 (concatD [doc (showString "print"), doc (showString "("), prt 0 expr, doc (showString ")"), doc (showString ";")])
   prtList _ [] = (concatD [])
   prtList _ (x:xs) = (concatD [prt 0 x, prt 0 xs])
 instance Print (Type a) where

@@ -1,0 +1,10 @@
+# (przesłanianie i statyczne wiązanie)
+# (zmienne globalne)
+
+String s = "global"
+
+def main() -> Void {
+    String s = "local";
+    print(s);
+    return;
+}

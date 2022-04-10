@@ -85,7 +85,7 @@ instance Print Ident where
 
 instance Print (Program a) where
   prt i e = case e of
-    Program _ defs -> prPrec i 0 (concatD [prt 0 defs])
+    Prog _ defs -> prPrec i 0 (concatD [prt 0 defs])
 
 instance Print (Def a) where
   prt i e = case e of
@@ -95,8 +95,8 @@ instance Print (Def a) where
   prtList _ (x:xs) = (concatD [prt 0 x, prt 0 xs])
 instance Print (Arg a) where
   prt i e = case e of
-    Arg _ type_ id -> prPrec i 0 (concatD [prt 0 type_, prt 0 id])
-    ArgRef _ type_ id -> prPrec i 0 (concatD [prt 0 type_, doc (showString "&"), prt 0 id])
+    ArgVal _ id type_ -> prPrec i 0 (concatD [prt 0 id, doc (showString ":"), prt 0 type_])
+    ArgRef _ id type_ -> prPrec i 0 (concatD [prt 0 id, doc (showString ":"), prt 0 type_, doc (showString "&")])
   prtList _ [] = (concatD [])
   prtList _ [x] = (concatD [prt 0 x])
   prtList _ (x:xs) = (concatD [prt 0 x, doc (showString ","), prt 0 xs])

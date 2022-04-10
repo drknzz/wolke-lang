@@ -24,34 +24,35 @@ import ErrM
   '-' { PT _ (TS _ 9) }
   '->' { PT _ (TS _ 10) }
   '/' { PT _ (TS _ 11) }
-  ';' { PT _ (TS _ 12) }
-  '<' { PT _ (TS _ 13) }
-  '<=' { PT _ (TS _ 14) }
-  '=' { PT _ (TS _ 15) }
-  '==' { PT _ (TS _ 16) }
-  '>' { PT _ (TS _ 17) }
-  '>=' { PT _ (TS _ 18) }
-  'Boolean' { PT _ (TS _ 19) }
-  'False' { PT _ (TS _ 20) }
-  'Function' { PT _ (TS _ 21) }
-  'Int' { PT _ (TS _ 22) }
-  'String' { PT _ (TS _ 23) }
-  'True' { PT _ (TS _ 24) }
-  'Void' { PT _ (TS _ 25) }
-  'and' { PT _ (TS _ 26) }
-  'break' { PT _ (TS _ 27) }
-  'continue' { PT _ (TS _ 28) }
-  'def' { PT _ (TS _ 29) }
-  'else' { PT _ (TS _ 30) }
-  'if' { PT _ (TS _ 31) }
-  'not' { PT _ (TS _ 32) }
-  'or' { PT _ (TS _ 33) }
-  'pass' { PT _ (TS _ 34) }
-  'print' { PT _ (TS _ 35) }
-  'return' { PT _ (TS _ 36) }
-  'while' { PT _ (TS _ 37) }
-  '{' { PT _ (TS _ 38) }
-  '}' { PT _ (TS _ 39) }
+  ':' { PT _ (TS _ 12) }
+  ';' { PT _ (TS _ 13) }
+  '<' { PT _ (TS _ 14) }
+  '<=' { PT _ (TS _ 15) }
+  '=' { PT _ (TS _ 16) }
+  '==' { PT _ (TS _ 17) }
+  '>' { PT _ (TS _ 18) }
+  '>=' { PT _ (TS _ 19) }
+  'Boolean' { PT _ (TS _ 20) }
+  'False' { PT _ (TS _ 21) }
+  'Function' { PT _ (TS _ 22) }
+  'Int' { PT _ (TS _ 23) }
+  'String' { PT _ (TS _ 24) }
+  'True' { PT _ (TS _ 25) }
+  'Void' { PT _ (TS _ 26) }
+  'and' { PT _ (TS _ 27) }
+  'break' { PT _ (TS _ 28) }
+  'continue' { PT _ (TS _ 29) }
+  'def' { PT _ (TS _ 30) }
+  'else' { PT _ (TS _ 31) }
+  'if' { PT _ (TS _ 32) }
+  'not' { PT _ (TS _ 33) }
+  'or' { PT _ (TS _ 34) }
+  'pass' { PT _ (TS _ 35) }
+  'print' { PT _ (TS _ 36) }
+  'return' { PT _ (TS _ 37) }
+  'while' { PT _ (TS _ 38) }
+  '{' { PT _ (TS _ 39) }
+  '}' { PT _ (TS _ 40) }
 
 L_ident  { PT _ (TV $$) }
 L_integ  { PT _ (TI $$) }
@@ -65,15 +66,15 @@ Integer :: { Integer } : L_integ  { (read ( $1)) :: Integer }
 String  :: { String }  : L_quoted {  $1 }
 
 Program :: { (Program ()) }
-Program : ListDef { AbsWolke.Program () $1 }
+Program : ListDef { AbsWolke.Prog () $1 }
 Def :: { (Def ()) }
 Def : 'def' Ident '(' ListArg ')' '->' Type Block { AbsWolke.FunDef () $2 $4 $7 $8 }
     | Type Ident '=' Expr { AbsWolke.VarDef () $1 $2 $4 }
 ListDef :: { [Def ()] }
 ListDef : Def { (:[]) $1 } | Def ListDef { (:) $1 $2 }
 Arg :: { (Arg ()) }
-Arg : Type Ident { AbsWolke.Arg () $1 $2 }
-    | Type '&' Ident { AbsWolke.ArgRef () $1 $3 }
+Arg : Ident ':' Type { AbsWolke.ArgVal () $1 $3 }
+    | Ident ':' Type '&' { AbsWolke.ArgRef () $1 $3 }
 ListArg :: { [Arg ()] }
 ListArg : {- empty -} { [] }
         | Arg { (:[]) $1 }

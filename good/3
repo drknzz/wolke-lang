@@ -1,0 +1,19 @@
+# (print)
+# (argumenty przez zmienną / przez wartość)
+
+def incVal(x: Int) -> Int {
+    return x + 1;
+}
+
+def incRef(x: Int&) -> Void {
+    x = x + 1;
+    return;
+}
+
+def main() -> Void {
+    Int x = 6;
+    print(incVal(x));
+    incRef(x);
+    print(x);
+    return;
+}

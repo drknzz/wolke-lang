@@ -40,10 +40,11 @@ The reserved words used in Wolke are the following:
 
 The symbols used in Wolke are the following:
   | ( | ) | -> | =
-  | & | , | { | }
-  | ; | - | + | *
-  | / | % | < | <=
-  | > | >= | == | !=
+  | : | & | , | {
+  | } | ; | - | +
+  | * | / | % | <
+  | <= | > | >= | ==
+  | != |  |  | 
 
 ===Comments===
 Single-line comments begin with #.There are no multiple-line comments in the grammar.
@@ -59,8 +60,8 @@ All other symbols are terminals.
   |  |  **|**  | //Type// //Ident// ``=`` //Expr// 
   | //[Def]// | -> | //Def// 
   |  |  **|**  | //Def// //[Def]// 
-  | //Arg// | -> | //Type// //Ident// 
-  |  |  **|**  | //Type// ``&`` //Ident// 
+  | //Arg// | -> | //Ident// ``:`` //Type// 
+  |  |  **|**  | //Ident// ``:`` //Type// ``&`` 
   | //[Arg]// | -> | **eps**
   |  |  **|**  | //Arg// 
   |  |  **|**  | //Arg// ``,`` //[Arg]// 

@@ -21,8 +21,8 @@ transDef x = case x of
   VarDef _ type_ ident expr -> failure x
 transArg :: Show a => Arg a -> Result
 transArg x = case x of
-  Arg _ type_ ident -> failure x
-  ArgRef _ type_ ident -> failure x
+  Arg _ ident type_ -> failure x
+  ArgRef _ ident type_ -> failure x
 transBlock :: Show a => Block a -> Result
 transBlock x = case x of
   SBlock _ stmts -> failure x
@@ -41,7 +41,6 @@ transStmt x = case x of
   Break _ -> failure x
   Continue _ -> failure x
   Print _ expr -> failure x
-  ToString _ expr -> failure x
 transType :: Show a => Type a -> Result
 transType x = case x of
   Int _ -> failure x

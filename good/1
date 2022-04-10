@@ -1,0 +1,9 @@
+# (trzy typy)
+# (zmienne, przypisanie)
+
+def main() -> Void {
+    Int x = 1;
+    String y = "1";
+    Boolean z = True;
+    return;
+}

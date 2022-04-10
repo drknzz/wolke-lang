@@ -14,15 +14,15 @@ transIdent x = case x of
   Ident string -> failure x
 transProgram :: Show a => Program a -> Result
 transProgram x = case x of
-  Program _ defs -> failure x
+  Prog _ defs -> failure x
 transDef :: Show a => Def a -> Result
 transDef x = case x of
   FunDef _ ident args type_ block -> failure x
   VarDef _ type_ ident expr -> failure x
 transArg :: Show a => Arg a -> Result
 transArg x = case x of
-  Arg _ type_ ident -> failure x
-  ArgRef _ type_ ident -> failure x
+  ArgVal _ ident type_ -> failure x
+  ArgRef _ ident type_ -> failure x
 transBlock :: Show a => Block a -> Result
 transBlock x = case x of
   SBlock _ stmts -> failure x
