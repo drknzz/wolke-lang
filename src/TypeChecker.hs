@@ -306,8 +306,10 @@ checkProgram (fun@(Abs.FunDef p idn' args ret' b@(Abs.SBlock pb stmts)):defs) = 
         Just _ -> throwEx p ("Redefinition of " ++ idn)
         Nothing -> do
             let r_fun = M.union (M.insert idn (TFun (map convArg args) ret) M.empty) (M.insert "return" ret r)
-            r_args <- local (const r_fun) (insertArgs args)
-            local (const r_args) (checkBlock b)
+            r_args_fun <- local (const r_fun) (insertArgs args)
+            r_args <- local (const M.empty) (insertArgs args)
+            local (const r_args) (checkSDefs stmts)
+            local (const r_args_fun) (checkBlock b)
             local (const r_fun) (checkProgram defs)
     where
         checkRet (Abs.Ret _ _) = pure ()
