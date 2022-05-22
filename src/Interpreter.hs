@@ -18,7 +18,7 @@ data Value
     | VStr String
     | VBool Bool
     | VVoid
-    | VFun [Abs.Arg] Abs.Block Env
+    | VFun [Abs.Arg] Abs.Block Env Abs.Type
     | Blank
     deriving (Eq)
 
@@ -32,7 +32,8 @@ data Return
     = RReturn Value
     | RBreak
     | RContinue
-    
+    | RNothing
+
 
 type Loc = Int
 
@@ -100,11 +101,11 @@ eval (Abs.EApp p idn exps) = do
     v <- getValue (convIdent idn)
     case v of
         Left e -> throwEx p e
-        Right fun@(VFun args (Abs.SBlock _ b) env) -> do
+        Right fun@(VFun args bl@(Abs.SBlock _ b) env t) -> do
             r <- insertArgs args exps env
-            local (const r) (f b)
+            local (const r) (f (Abs.hasPosition bl) t b)
         Right _ -> return Blank
-    
+
     where
         insertArgs ((Abs.ArgVal _ idn t):args) (e:exps) env = do
             loc <- alloc
@@ -116,15 +117,20 @@ eval (Abs.EApp p idn exps) = do
             loc <- getLoc (convIdent x)
             let env' = M.insert (convIdent idn) loc env
             insertArgs args exps env'
-        insertArgs ((Abs.ArgRef _ idn t):args) (exp:exps) env = do
-            throwEx (Abs.hasPosition exp) "Non-variable passed by reference"
         insertArgs _ _ env = return env
 
-        f b = do
+        f p' t b = do
             ret <- runSt b
-            case ret of
-                Just (RReturn v) -> return v
-                _ -> return Blank
+            if isNothing ret && not (isVoid t)
+                then throwEx p' ("Reached end of non-Void function: " ++ convIdent idn)
+                else return (getVal ret)
+        
+        isNothing RNothing = True
+        isNothing _ = False
+        isVoid (Abs.Void _) = True
+        isVoid _ = False
+        getVal (RReturn v) = v
+        getVal _ = Blank
 
 eval (Abs.EString p s) = return $ VStr s
 
@@ -188,8 +194,8 @@ eval (Abs.EOr p exp1 exp2) = do
 
 ----------------------------------------------------- STATEMENTS -----------------------------------------------------
 
-runSt :: [Abs.Stmt] -> IM (Maybe Return)
-runSt [] = return Nothing
+runSt :: [Abs.Stmt] -> IM Return
+runSt [] = return RNothing
 
 runSt ((Abs.Empty p):stmts) = runSt stmts
 
@@ -208,9 +214,9 @@ runSt ((Abs.Ass p idn exp):stmts) = do
 
 runSt ((Abs.Ret p exp):stmts) = do
     v <- eval exp
-    return $ Just (RReturn v)
+    return (RReturn v)
 
-runSt ((Abs.VRet p):stmts) = return $ Just (RReturn VVoid)
+runSt ((Abs.VRet p):stmts) = return (RReturn VVoid)
 
 runSt ((Abs.Cond p exp (Abs.SBlock _ b)):stmts) = do
     v <- eval exp
@@ -218,10 +224,10 @@ runSt ((Abs.Cond p exp (Abs.SBlock _ b)):stmts) = do
         VBool True -> do
             ret <- runSt b
             case ret of
-                Just r@(RReturn val) -> return $ Just r
-                Just RBreak -> return $ Just RBreak
-                Just RContinue -> return $ Just RContinue
-                Nothing -> runSt stmts
+                r@(RReturn val) -> return r
+                RBreak -> return RBreak
+                RContinue -> return RContinue
+                RNothing -> runSt stmts
         _ -> runSt stmts
 
 runSt ((Abs.CondElse p exp (Abs.SBlock _ b1) (Abs.SBlock _ b2)):stmts) = do
@@ -230,17 +236,17 @@ runSt ((Abs.CondElse p exp (Abs.SBlock _ b1) (Abs.SBlock _ b2)):stmts) = do
         VBool True -> do
             ret <- runSt b1
             case ret of
-                Just r@(RReturn val) -> return $ Just r
-                Just RBreak -> return $ Just RBreak
-                Just RContinue -> return $ Just RContinue
-                Nothing -> runSt stmts
+                r@(RReturn val) -> return r
+                RBreak -> return RBreak
+                RContinue -> return RContinue
+                RNothing -> runSt stmts
         _ -> do
             ret <- runSt b2
             case ret of
-                Just r@(RReturn val) -> return $ Just r
-                Just RBreak -> return $ Just RBreak
-                Just RContinue -> return $ Just RContinue
-                Nothing -> runSt stmts
+                r@(RReturn val) -> return r
+                RBreak -> return RBreak
+                RContinue -> return RContinue
+                RNothing -> runSt stmts
 
 runSt w@((Abs.While p exp (Abs.SBlock _ b)):stmts) = do
     v <- eval exp
@@ -248,17 +254,17 @@ runSt w@((Abs.While p exp (Abs.SBlock _ b)):stmts) = do
         VBool True -> do
             ret <- runSt b
             case ret of
-                Just r@(RReturn val) -> return $ Just r
-                Just RBreak -> runSt stmts
-                Just RContinue -> runSt w
-                Nothing -> runSt w
+                r@(RReturn val) -> return r
+                RBreak -> runSt stmts
+                RContinue -> runSt w
+                RNothing -> runSt w
         _ -> runSt stmts
 
 runSt ((Abs.SExp _ exp):stmts) = eval exp >> runSt stmts
 
-runSt ((Abs.Break _):stmts) = return $ Just RBreak
+runSt ((Abs.Break _):stmts) = return RBreak
 
-runSt ((Abs.Continue _):stmts) = return $ Just RContinue
+runSt ((Abs.Continue _):stmts) = return RContinue
 
 runSt ((Abs.Print _ exp):stmts) = do
     v <- eval exp
@@ -280,7 +286,7 @@ allocDefs [] = ask
 allocDefs ((Abs.FunDef p idn args t b):defs) = do
     r <- ask
     loc <- alloc
-    storeInsert loc (VFun args b (M.insert (convIdent idn) loc r))
+    storeInsert loc (VFun args b (M.insert (convIdent idn) loc r) t)
     local (M.insert (convIdent idn) loc) (allocDefs defs)
 
 allocDefs ((Abs.VarDef p t idn exp):defs) = do
@@ -297,7 +303,7 @@ prepare defs = do
     v <- local (const r) (getValue "main")
     case v of
         Left e -> throwEx Nothing e
-        Right (VFun [] (Abs.SBlock stmts _) _) -> do
+        Right (VFun [] (Abs.SBlock stmts _) _ _) -> do
             local (const r) (eval (Abs.EApp Nothing (Abs.Ident "main") []))
             return ()
         Right _ -> return ()

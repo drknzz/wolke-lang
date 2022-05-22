@@ -19,7 +19,7 @@ data Type
     | TStr
     | TBool
     | TVoid
-    | TFun [Type] Type
+    | TFun [Abs.Arg] Type
     deriving (Eq)
 
 instance Show Type where
@@ -76,15 +76,23 @@ getType (Abs.EString _ _) = return TStr
 
 getType (Abs.EApp p (Abs.Ident idn) args) = do
     r <- ask
-    args <- mapM getType args
+    argTypes <- mapM getType args
     case idn of
         "main" -> throwEx p "The function main shall not be used within a program"
         _ -> case M.lookup idn r of
-                Just (TFun as ret) ->
-                    if as == args
+                Just (TFun arguments ret) -> do
+                    checkArgRefs arguments args
+                    if map convArg arguments == argTypes
                         then return ret
                         else throwEx p ("Invalid arguments given to application of function " ++ idn)
                 _ -> throwEx p ("Invalid operation: application of " ++ idn)
+    where
+        checkArgRefs :: [Abs.Arg] -> [Abs.Expr] -> TCM ()
+        checkArgRefs [] [] = pure ()
+        checkArgRefs ((Abs.ArgRef _ _ _):xs) ((Abs.EVar _ _):ys) = checkArgRefs xs ys
+        checkArgRefs ((Abs.ArgRef _ _ _):_) (arg:_) = throwEx (Abs.hasPosition arg) "Non-variable passed by reference"
+        checkArgRefs (_:xs) (_:ys) = checkArgRefs xs ys
+        checkArgRefs _ _ = pure ()
 
 getType (Abs.Neg p exp) = do
     t <- getType exp
@@ -300,20 +308,16 @@ checkProgram ((Abs.VarDef p t idn' exp):defs) = do
 
 checkProgram (fun@(Abs.FunDef p idn' args ret' b@(Abs.SBlock pb stmts)):defs) = do
     when (null stmts) $ throwEx p ("Empty function: " ++ idn)
-    when (ret /= TVoid) $ checkRet (last stmts)
     r <- ask
     case M.lookup idn r of
         Just _ -> throwEx p ("Redefinition of " ++ idn)
         Nothing -> do
-            let r_fun = M.union (M.insert idn (TFun (map convArg args) ret) M.empty) (M.insert "return" ret r)
-            r_args_fun <- local (const r_fun) (insertArgs args)
-            r_args <- local (const M.empty) (insertArgs args)
-            local (const r_args) (checkSDefs stmts)
-            local (const r_args_fun) (checkBlock b)
-            local (const r_fun) (checkProgram defs)
+            let r_fun = M.insert idn (TFun args ret) M.empty
+                r_fun_ret = M.insert "return" ret r_fun
+            r_fun_ret_args <- local (const r_fun_ret) (insertArgs args)
+            local (const r_fun_ret_args) (checkSDefs stmts)
+            local (M.union r_fun_ret_args) (checkStmts stmts)
+            local (M.union r_fun) (checkProgram defs)
     where
-        checkRet (Abs.Ret _ _) = pure ()
-        checkRet (Abs.VRet _) = throwEx p "No return value"
-        checkRet _ = throwEx p ("No return statement at the end of function " ++ idn ++ " block")
         idn = convIdent idn'
         ret = convType ret'
